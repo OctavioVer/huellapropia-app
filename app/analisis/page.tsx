@@ -296,9 +296,9 @@ Responde UNICAMENTE con un JSON valido (sin backticks, sin markdown, sin texto a
         RED: [number, number, number] = [248, 113, 113],
         AMBER: [number, number, number] = [251, 191, 36];
       const pageSetup = () => {
-        doc.setFillColor(...DARK_BG);
+        doc.setFillColor(DARK_BG[0], DARK_BG[1], DARK_BG[2]);
         doc.rect(0, 0, W, 297, "F");
-        doc.setFillColor(...GOLD);
+        doc.setFillColor(GOLD[0], GOLD[1], GOLD[2]);
         doc.rect(0, 293, W, 4, "F");
       };
       const checkPage = (h: number) => {
@@ -311,22 +311,21 @@ Responde UNICAMENTE con un JSON valido (sin backticks, sin markdown, sin texto a
       const sectionTitle = (t: string) => {
         checkPage(16);
         y += 4;
-        doc.setDrawColor(...GOLD);
+        doc.setDrawColor(GOLD[0], GOLD[1], GOLD[2]);
         doc.setLineWidth(0.4);
         doc.line(M, y, M + CW, y);
         y += 7;
         doc.setFont("helvetica", "bold");
         doc.setFontSize(10);
-        doc.setTextColor(...GOLD);
+        doc.setTextColor(GOLD[0], GOLD[1], GOLD[2]);
         doc.text(t.toUpperCase(), M, y);
         y += 7;
       };
       const writeText = (t: string, opts: any = {}) => {
         doc.setFont("helvetica", opts.bold ? "bold" : "normal");
         doc.setFontSize(opts.size || 9.5);
-        doc.setTextColor(
-          ...((opts.color || WHITE) as [number, number, number]),
-        );
+        const c = (opts.color || WHITE) as [number, number, number];
+        doc.setTextColor(c[0], c[1], c[2]);
         const lines = doc.splitTextToSize(
           String(t || ""),
           CW - (opts.indent || 0),
@@ -345,14 +344,12 @@ Responde UNICAMENTE con un JSON valido (sin backticks, sin markdown, sin texto a
           checkPage(6);
           doc.setFont("helvetica", "bold");
           doc.setFontSize(9.5);
-          doc.setTextColor(
-            ...((opts.markerColor || GOLD) as [number, number, number]),
-          );
+          const mc = (opts.markerColor || GOLD) as [number, number, number];
+          doc.setTextColor(mc[0], mc[1], mc[2]);
           doc.text(prefix, M + 2, y);
           doc.setFont("helvetica", "normal");
-          doc.setTextColor(
-            ...((opts.color || WHITE) as [number, number, number]),
-          );
+          const c = (opts.color || WHITE) as [number, number, number];
+          doc.setTextColor(c[0], c[1], c[2]);
           const lines = doc.splitTextToSize(String(item), CW - 12);
           lines.forEach((l: string) => {
             checkPage(5);
@@ -365,19 +362,19 @@ Responde UNICAMENTE con un JSON valido (sin backticks, sin markdown, sin texto a
       };
 
       pageSetup();
-      doc.setFillColor(...HEADER_BG);
+      doc.setFillColor(HEADER_BG[0], HEADER_BG[1], HEADER_BG[2]);
       doc.rect(0, 0, W, 70, "F");
-      doc.setFillColor(...GOLD);
+      doc.setFillColor(GOLD[0], GOLD[1], GOLD[2]);
       doc.rect(0, 0, W, 2.5, "F");
       doc.rect(M, 14, 2, 35, "F");
       y = 20;
       doc.setFont("helvetica", "bold");
       doc.setFontSize(8);
-      doc.setTextColor(...GOLD);
+      doc.setTextColor(GOLD[0], GOLD[1], GOLD[2]);
       doc.text("INFORME EJECUTIVO LEGISLATIVO", M + 8, y);
       y += 12;
       doc.setFontSize(19);
-      doc.setTextColor(...WHITE);
+      doc.setTextColor(WHITE[0], WHITE[1], WHITE[2]);
       const tLines = doc.splitTextToSize(
         String(analysis.titulo || ""),
         CW - 10,
@@ -389,7 +386,7 @@ Responde UNICAMENTE con un JSON valido (sin backticks, sin markdown, sin texto a
       y = 58;
       doc.setFont("helvetica", "normal");
       doc.setFontSize(7.5);
-      doc.setTextColor(...LGRAY);
+      doc.setTextColor(LGRAY[0], LGRAY[1], LGRAY[2]);
       doc.text(
         `Tipo: ${analysis.tipo || "-"}  |  Comision: ${analysis.comision || "-"}`,
         M + 8,
@@ -402,21 +399,21 @@ Responde UNICAMENTE con un JSON valido (sin backticks, sin markdown, sin texto a
           : analysis.urgencia === "Media"
             ? (AMBER as [number, number, number])
             : (GREEN as [number, number, number]);
-      doc.setTextColor(...urgCol);
+      doc.setTextColor(urgCol[0], urgCol[1], urgCol[2]);
       doc.setFont("helvetica", "bold");
       doc.text(
         `Urgencia: ${(analysis.urgencia || "-").toUpperCase()}`,
         M + 8,
         y,
       );
-      doc.setTextColor(...GOLD);
+      doc.setTextColor(GOLD[0], GOLD[1], GOLD[2]);
       doc.text(
         `Relevancia: ${analysis.score_relevancia || "-"}/100`,
         M + 60,
         y,
       );
       const now = new Date();
-      doc.setTextColor(...LGRAY);
+      doc.setTextColor(LGRAY[0], LGRAY[1], LGRAY[2]);
       doc.setFont("helvetica", "normal");
       doc.text(`Generado: ${now.toLocaleDateString("es-AR")}`, M + 120, y);
       y = 80;
@@ -427,7 +424,7 @@ Responde UNICAMENTE con un JSON valido (sin backticks, sin markdown, sin texto a
       sectionTitle("Analisis de Impacto");
       doc.setFont("helvetica", "bold");
       doc.setFontSize(8);
-      doc.setTextColor(...GREEN);
+      doc.setTextColor(GREEN[0], GREEN[1], GREEN[2]);
       checkPage(6);
       doc.text("IMPACTOS POSITIVOS", M, y);
       y += 5;
@@ -437,7 +434,7 @@ Responde UNICAMENTE con un JSON valido (sin backticks, sin markdown, sin texto a
       });
       doc.setFont("helvetica", "bold");
       doc.setFontSize(8);
-      doc.setTextColor(...RED);
+      doc.setTextColor(RED[0], RED[1], RED[2]);
       checkPage(6);
       doc.text("RIESGOS", M, y);
       y += 5;
@@ -461,17 +458,17 @@ Responde UNICAMENTE con un JSON valido (sin backticks, sin markdown, sin texto a
         : (analysis.recomendacion_voto || "").includes("Rechazar")
           ? RED
           : AMBER;
-      doc.setFillColor(...vCol);
+      doc.setFillColor(vCol[0], vCol[1], vCol[2]);
       doc.roundedRect(M, y - 4, 55, 10, 2, 2, "F");
       doc.setFont("helvetica", "bold");
       doc.setFontSize(10);
-      doc.setTextColor(...DARK_BG);
+      doc.setTextColor(DARK_BG[0], DARK_BG[1], DARK_BG[2]);
       doc.text((analysis.recomendacion_voto || "").toUpperCase(), M + 3, y + 3);
       y += 14;
       writeText(analysis.justificacion_voto);
       doc.setFont("helvetica", "bold");
       doc.setFontSize(8);
-      doc.setTextColor(...GREEN);
+      doc.setTextColor(GREEN[0], GREEN[1], GREEN[2]);
       checkPage(6);
       doc.text("ARGUMENTOS A FAVOR", M, y);
       y += 5;
@@ -481,7 +478,7 @@ Responde UNICAMENTE con un JSON valido (sin backticks, sin markdown, sin texto a
       });
       doc.setFont("helvetica", "bold");
       doc.setFontSize(8);
-      doc.setTextColor(...RED);
+      doc.setTextColor(RED[0], RED[1], RED[2]);
       checkPage(6);
       doc.text("ARGUMENTOS EN CONTRA", M, y);
       y += 5;
@@ -499,7 +496,7 @@ Responde UNICAMENTE con un JSON valido (sin backticks, sin markdown, sin texto a
         doc.setPage(i);
         doc.setFontSize(6.5);
         doc.setFont("helvetica", "normal");
-        doc.setTextColor(...LGRAY);
+        doc.setTextColor(LGRAY[0], LGRAY[1], LGRAY[2]);
         doc.text("Huella Propia · Analisis Legislativo Inteligente", M, 289);
         doc.text(`Pag. ${i}/${pages}`, W - M - 14, 289);
       }
