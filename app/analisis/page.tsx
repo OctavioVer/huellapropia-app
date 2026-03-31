@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 const SAMPLE_BILL = `PROYECTO DE LEY - RÉGIMEN DE PROMOCIÓN DE LA ECONOMÍA DEL CONOCIMIENTO
 
@@ -71,15 +72,28 @@ export default function AnalisisPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [userName, setUserName] = useState("");
   const router = useRouter();
 
   useEffect(() => {
-    if (typeof window !== "undefined" && !sessionStorage.getItem("hp-token")) {
+    if (typeof window === "undefined") return;
+    const raw = localStorage.getItem("hp-auth");
+    if (!raw) { router.push("/"); return; }
+    try {
+      const { user } = JSON.parse(raw);
+      setUserName(user?.nombre || "");
+    } catch {
       router.push("/");
     }
   }, [router]);
 
-  const getToken = () => typeof window !== "undefined" ? sessionStorage.getItem("hp-token") || "" : "";
+  const getAuthHeader = (): Record<string, string> => {
+    if (typeof window === "undefined") return {};
+    const raw = localStorage.getItem("hp-auth");
+    if (!raw) return {};
+    try { return { Authorization: `Bearer ${JSON.parse(raw).token}` }; } catch { return {}; }
+  };
 
   const analyzeProject = async () => {
     if (!billText.trim()) return;
@@ -117,7 +131,7 @@ Responde UNICAMENTE con un JSON valido (sin backticks, sin markdown, sin texto a
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-app-token": getToken(),
+          ...getAuthHeader(),
         },
         body: JSON.stringify({
           model: "claude-sonnet-4-20250514",
@@ -137,7 +151,26 @@ Responde UNICAMENTE con un JSON valido (sin backticks, sin markdown, sin texto a
 
       const text = data.content.filter((b: any) => b.type === "text").map((b: any) => b.text).join("");
       const cleaned = text.replace(/```json|```/g, "").trim();
-      setAnalysis(JSON.parse(cleaned));
+      const parsed = JSON.parse(cleaned);
+      setAnalysis(parsed);
+      setSaved(false);
+
+      // Guardar automáticamente en el historial
+      try {
+        await fetch("/api/analyses", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...getAuthHeader() },
+          body: JSON.stringify({
+            titulo: parsed.titulo,
+            texto_proyecto: billText,
+            resultado_json: parsed,
+            palabras: billText.split(/\s+/).filter(Boolean).length,
+          }),
+        });
+        setSaved(true);
+      } catch {
+        // No bloqueamos la UI si falla el guardado
+      }
     } catch (err: any) {
       setError(err.message.includes("JSON") ? "Error procesando la respuesta. Intentá nuevamente." : `Error: ${err.message}`);
     } finally {
@@ -203,9 +236,15 @@ Responde UNICAMENTE con un JSON valido (sin backticks, sin markdown, sin texto a
           <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "linear-gradient(135deg, #CBA652, #A88B3A)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", fontWeight: 800, color: "#0B1120" }}>HP</div>
           <span style={{ fontSize: "14px", fontWeight: 700, color: "#F1F5F9" }}>Análisis Legislativo</span>
         </div>
-        <button onClick={() => { sessionStorage.removeItem("hp-token"); router.push("/"); }} style={{ background: "rgba(100,116,139,0.15)", border: "1px solid rgba(100,116,139,0.25)", color: "#94A3B8", fontSize: "12px", padding: "6px 14px", borderRadius: "8px", cursor: "pointer" }}>
-          Cerrar sesión
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          {userName && <span style={{ fontSize: "13px", color: "#64748B" }}>{userName}</span>}
+          <Link href="/historial" style={{ background: "rgba(203,166,82,0.08)", border: "1px solid rgba(203,166,82,0.2)", color: "#CBA652", fontSize: "12px", padding: "6px 14px", borderRadius: "8px", cursor: "pointer", fontWeight: 600, textDecoration: "none" }}>
+            Historial
+          </Link>
+          <button onClick={() => { localStorage.removeItem("hp-auth"); router.push("/"); }} style={{ background: "rgba(100,116,139,0.15)", border: "1px solid rgba(100,116,139,0.25)", color: "#94A3B8", fontSize: "12px", padding: "6px 14px", borderRadius: "8px", cursor: "pointer" }}>
+            Cerrar sesión
+          </button>
+        </div>
       </div>
 
       <div style={{ maxWidth: "880px", margin: "0 auto", padding: "36px 20px" }}>
@@ -246,10 +285,15 @@ Responde UNICAMENTE con un JSON valido (sin backticks, sin markdown, sin texto a
         {analysis && (
           <div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px", flexWrap: "wrap", gap: "12px" }}>
-              <button onClick={() => { setAnalysis(null); setBillText(""); }} style={{ background: "rgba(100,116,139,0.15)", border: "1px solid rgba(100,116,139,0.25)", color: "#94A3B8", fontSize: "13px", padding: "8px 16px", borderRadius: "8px", cursor: "pointer" }}>← Nuevo análisis</button>
+              <button onClick={() => { setAnalysis(null); setBillText(""); setSaved(false); }} style={{ background: "rgba(100,116,139,0.15)", border: "1px solid rgba(100,116,139,0.25)", color: "#94A3B8", fontSize: "13px", padding: "8px 16px", borderRadius: "8px", cursor: "pointer" }}>← Nuevo análisis</button>
               <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
                 <span style={{ background: `rgba(${analysis.urgencia==="Alta"?"239,68,68":analysis.urgencia==="Media"?"245,158,11":"34,197,94"},0.12)`, color: urgencyColor(analysis.urgencia), border: `1px solid ${urgencyColor(analysis.urgencia)}40`, padding: "4px 12px", borderRadius: "6px", fontSize: "12px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "1px" }}>Urgencia: {analysis.urgencia}</span>
                 <span style={{ background: "rgba(203,166,82,0.1)", color: "#CBA652", border: "1px solid rgba(203,166,82,0.25)", padding: "4px 12px", borderRadius: "6px", fontSize: "12px", fontWeight: 600 }}>Relevancia: {analysis.score_relevancia}/100</span>
+                {saved && (
+                  <span style={{ fontSize: "12px", color: "#4ADE80", display: "flex", alignItems: "center", gap: "4px" }}>
+                    ✓ Guardado en historial
+                  </span>
+                )}
                 <button onClick={exportPDF} disabled={exporting} style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: exporting ? "rgba(100,116,139,0.2)" : "linear-gradient(135deg, #CBA652, #A88B3A)", color: exporting ? "#475569" : "#0B1120", border: "none", borderRadius: "8px", padding: "8px 18px", fontSize: "12px", fontWeight: 700, cursor: exporting ? "not-allowed" : "pointer", boxShadow: exporting ? "none" : "0 2px 12px rgba(203,166,82,0.3)" }}>
                   {exporting ? "⏳ Generando..." : "📥 Exportar PDF"}
                 </button>

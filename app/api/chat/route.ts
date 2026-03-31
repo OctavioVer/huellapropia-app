@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
+import { verifyToken } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
-  // Verificar autenticación simple
-  const authHeader = req.headers.get("x-app-token");
-  if (authHeader !== process.env.APP_PASSWORD) {
+  // Aceptar JWT (Authorization: Bearer <token>) o APP_PASSWORD legacy (x-app-token)
+  const bearerToken = req.headers.get("Authorization")?.split(" ")[1];
+  const legacyToken = req.headers.get("x-app-token");
+
+  const authorized =
+    (bearerToken && !!verifyToken(bearerToken)) ||
+    (legacyToken && legacyToken === process.env.APP_PASSWORD);
+
+  if (!authorized) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
