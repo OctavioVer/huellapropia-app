@@ -153,7 +153,7 @@ Responde UNICAMENTE con un JSON valido (sin backticks, sin markdown, sin texto a
       const doc = new jsPDF("p", "mm", "a4");
       const W = 210, M = 18, CW = W - M * 2;
       let y = 0;
-      const GOLD = [203,166,82] as const, DARK_BG = [15,20,35] as const, HEADER_BG = [20,28,50] as const, WHITE = [240,244,248] as const, LGRAY = [160,174,192] as const, GREEN = [74,222,128] as const, RED = [248,113,113] as const, AMBER = [251,191,36] as const;
+      const GOLD: [number,number,number] = [203,166,82], DARK_BG: [number,number,number] = [15,20,35], HEADER_BG: [number,number,number] = [20,28,50], WHITE: [number,number,number] = [240,244,248], LGRAY: [number,number,number] = [160,174,192], GREEN: [number,number,number] = [74,222,128], RED: [number,number,number] = [248,113,113], AMBER: [number,number,number] = [251,191,36];
       const pageSetup = () => { doc.setFillColor(...DARK_BG); doc.rect(0,0,W,297,"F"); doc.setFillColor(...GOLD); doc.rect(0,293,W,4,"F"); };
       const checkPage = (h: number) => { if (y+h>280) { doc.addPage(); pageSetup(); y=18; } };
       const sectionTitle = (t: string) => { checkPage(16); y+=4; doc.setDrawColor(...GOLD); doc.setLineWidth(0.4); doc.line(M,y,M+CW,y); y+=7; doc.setFont("helvetica","bold"); doc.setFontSize(10); doc.setTextColor(...GOLD); doc.text(t.toUpperCase(),M,y); y+=7; };
